@@ -1,0 +1,26 @@
+# Ignore DerivedDataCache
+DerivedDataCache/
+
+# Ignore Intermediate
+Intermediate/
+
+# Ignore Saved
+Saved/
+
+# Ignore .vs folder (Visual Studio files)
+.vs/
+
+# Ignore project binaries
+Binaries/
+
+# Ignore user-specific files (Visual Studio, Xcode, etc.)
+*.user
+*.userprefs
+*.suo
+*.sdf
+*.db
+
+# Ignore Unreal Engine-specific files
+*.xcodeproj
+*.idea
+*.iml
