@@ -3,15 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "Characters/CharacterType.h"
+#include "BaseCharacter.h"
 #include "SlashCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
+class AItem;
+class UAnimMontage;
+
 
 UCLASS()
-class SLASH_API ASlashCharacter : public ACharacter
+class SLASH_API ASlashCharacter : public ABaseCharacter
 {
 	GENERATED_BODY()
 
@@ -25,16 +29,48 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hiiter) override;
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
+	//callback for input
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void Turn(float Value);
 	void LookUp(float Value);
+	void EKeyPressed();
+	virtual void Attack() override;
+
+	// Play montage function
+	virtual void PlayAttackMontage() override;
+
+	virtual void AttackEnd() override;
+
+	virtual bool CanAttack() override;  
+
+	void PlayEquipMontage(FName SectionName);
+	bool CanDisarm() const { return ActionState == EActionState::EAS_Unoccupied && CharacterState != ECharacterState::ECS_Unequipped; }
+	bool CanArm() const { return ActionState == EActionState::EAS_Unoccupied && CharacterState == ECharacterState::ECS_Unequipped && EquippedWeapon; }
+
+	UFUNCTION(BlueprintCallable) 
+	void Disarm();
+
+	UFUNCTION(BlueprintCallable)
+	void Arm();
+
+	UFUNCTION(BlueprintCallable)
+	void HitReactEnd();
 
 private:
+
+	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
@@ -48,4 +84,15 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Hair)
 	UGroomComponent* Eyebrows;
 
+	UPROPERTY(VisibleInstanceOnly)
+	AItem* OverlappingItem;
+
+
+	UPROPERTY(EditDefaultsOnly, Category = Montages)
+	UAnimMontage* EquipMontage;
+
+public:
+	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
+
+	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 };

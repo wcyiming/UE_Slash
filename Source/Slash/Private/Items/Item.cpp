@@ -4,6 +4,8 @@
 #include "Items/Item.h"
 #include "Slash/DebugMacros.h"
 #include "Components/SphereComponent.h"
+#include "Characters/SlashCharacter.h"
+#include "NiagaraComponent.h"
 
 // Sets default values
 AItem::AItem()
@@ -12,10 +14,15 @@ AItem::AItem()
 	PrimaryActorTick.bCanEverTick = true;
 
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMeshComponent"));
+	ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	RootComponent = ItemMesh;
 
 	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
 	Sphere->SetupAttachment(GetRootComponent());
+
+	EmbersEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("EmbersEffect"));
+	EmbersEffect->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -25,12 +32,24 @@ void AItem::BeginPlay()
 
 	UE_LOG(LogTemp, Warning, TEXT("Item BeginPlay"));
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereOverlap);
+
+	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
 }
 
 void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
-	const FString OtherActorName = OtherActor->GetName();
-	if (GEngine) {
-		GEngine->AddOnScreenDebugMessage(1, 30.f, FColor::Red, TEXT("Sphere Begin Overlap with ") + OtherActorName);
+	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(OtherActor);
+	if (SlashCharacter) {
+		UE_LOG(LogTemp, Warning, TEXT("Item Overlap"));
+		SlashCharacter->SetOverlappingItem(this);
+
+	}
+}
+
+void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
+	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(OtherActor);
+	if (SlashCharacter) {
+		SlashCharacter->SetOverlappingItem(nullptr);
+
 	}
 }
 

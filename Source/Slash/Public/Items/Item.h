@@ -8,6 +8,11 @@
 
 class USphereComponent;
 
+enum class EItemState : uint8 {
+	EIS_Hovering,
+	EIT_Equipped,
+};
+
 UCLASS()
 class SLASH_API AItem : public AActor
 {
@@ -30,8 +35,22 @@ protected:
 	T Avg(T First, T Second);
 
 	UFUNCTION()
-	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UStaticMeshComponent* ItemMesh;
+
+	EItemState ItemState = EItemState::EIS_Hovering;
+
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* Sphere;
+
+	UPROPERTY(EditAnywhere, Category = "Effect")
+	class UNiagaraComponent* EmbersEffect;
 
 private:
 	float RunningTime;
@@ -39,11 +58,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	float TimeConstant = 5.f;
 
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* ItemMesh;
-
-	UPROPERTY(VisibleAnywhere)
-	USphereComponent* Sphere;
 };
 
 template<typename T>
